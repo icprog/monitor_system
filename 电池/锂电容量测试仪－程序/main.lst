@@ -1,0 +1,298 @@
+C51 COMPILER V9.01   MAIN                                                                  01/03/2014 13:18:31 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\out\main.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE src\main.c BROWSE DEBUG OBJECTEXTEND PRINT(.\main.lst) OBJECT(.\out\main.ob
+                    -j)
+
+line level    source
+
+   1          #include "lzf5162.h"
+   2          #include "s6b3306.h"
+   3          #include "zi16.h"
+   4          
+   5          sbit    ax  = P2^5;
+   6          sbit    bx  = P2^4;
+   7          sbit    zj  = P2^2;
+   8          sbit    kt  = P2^7;
+   9          sbit    mosoff  = P3^5;
+  10          sbit    led0  = P1^7;
+  11          
+  12          static bit aold,bold;//编码器旧状态
+  13          
+  14          uint8_t tmrn;
+  15          uint16_t adc4;// 电流值
+  16          uint16_t adc3;//电池电压
+  17          uint16_t adc4a;//  电流值
+  18          uint16_t adc3v;//电池电压
+  19          uint16_t mah;
+  20          uint16_t mas;   //1mA*1S  1mah = 3600maS
+  21          uint8_t tmrnx;
+  22          uint8_t seta=10;
+  23          uint8_t setv=30;
+  24          uint8_t setn=0; //菜单状态
+  25          
+  26          bit fdzt=0;    //放电状态
+  27          
+  28          
+  29          uint16_t adcz(uint8_t adn);
+  30          void tm0_init(void);
+  31          void bmkg(void);
+  32          void jia1(void);
+  33          void jian1(void);
+  34          //void yu();
+  35          void main()
+  36          {
+  37   1        uint16_t adc3old,adc4old,mahold;
+  38   1        bit xsx,fdztold;
+  39   1       
+  40   1        P2M0 = 0X0;
+  41   1        P2M1 = 0X0;  //8051标准模式
+  42   1        P1M0 = 0X0;
+  43   1        P1M1 = 0X0ff;  //改成全推挽输出
+  44   1        P4M0 = 0X0;
+  45   1        P4M1 = 0X0ff;  //改成全推挽输出 
+  46   1      
+  47   1        P3M0 &= ~(1<<5);
+  48   1        P3M1 |= (1<<5);
+  49   1        led0 = 0;       mosoff  = 1;
+  50   1        P2 = 0X0FF;
+  51   1      
+  52   1        TMOD = 0X0|(1<<4);//定时器1以16位定时方式工作
+  53   1         
+  54   1        Init_S6B33B(); //初始化屏幕
+C51 COMPILER V9.01   MAIN                                                                  01/03/2014 13:18:31 PAGE 2   
+
+  55   1        BIUE(); //屏幕蓝色背景
+  56   1       
+  57   1        yu(); //预先固定显示的内容
+  58   1       
+  59   1        delay_1ms(10);
+  60   1        adcinit();
+  61   1        tm0_init();
+  62   1         xs_sz(seta, setv, setn);
+  63   1         xs_zt(0,0,0);
+  64   1         xsfdzt(fdzt);
+  65   1        EA=1;
+  66   1       
+  67   1      
+  68   1        while(1)
+  69   1        {
+  70   2              if(adc3old != adc3)
+  71   2               xsx = 1; 
+  72   2              if(adc4old != adc4)
+  73   2               xsx = 1; 
+  74   2              if(mahold != mah)
+  75   2               xsx = 1; 
+  76   2          if(xsx)
+  77   2              {
+  78   3               xs_zt(adc4,adc3,mah);
+  79   3               xsx = 0;
+  80   3               mahold = mah;  adc4old = adc4;  adc3old = adc3;
+  81   3      
+  82   3              }
+  83   2          else
+  84   2               delay_1ms(2);
+  85   2              if(fdztold != fdzt)
+  86   2              {
+  87   3               xsfdzt(fdzt);
+  88   3               fdztold = fdzt;
+  89   3              }
+  90   2      
+  91   2                       //显示时关掉中断.
+  92   2              //编码开关中键,按下改设置 
+  93   2      
+  94   2               //编码开关
+  95   2               if(seta == 0)
+  96   2                seta = 20;
+  97   2           if(seta >= 21)
+  98   2                seta = 1;                                  
+  99   2               if(setv == 0)
+ 100   2                setv = 50;
+ 101   2           if(setv >= 51)
+ 102   2                setv = 1;
+ 103   2               
+ 104   2               bmkg();
+ 105   2       
+ 106   2              //开始暂停按键
+ 107   2                delay_1ms(1);
+ 108   2              if(kt == 0)
+ 109   2              { 
+ 110   3               delay_1ms(10);
+ 111   3                if(kt == 0)
+ 112   3                {
+ 113   4                 if(fdzt==1)
+ 114   4                  {fdzt = 0; mosoff = 1;led0=1; pwm0(190,0);  }
+ 115   4                      else 
+ 116   4                       {fdzt = 1;pwm0(240,seta*6);
+C51 COMPILER V9.01   MAIN                                                                  01/03/2014 13:18:31 PAGE 3   
+
+ 117   5                        mosoff=0;}
+ 118   4                        
+ 119   4                while(!kt);
+ 120   4                delay(3);
+ 121   4                xsfdzt(fdzt);
+ 122   4                
+ 123   4                
+ 124   4                }
+ 125   3                
+ 126   3              }
+ 127   2              
+ 128   2      
+ 129   2          if(zj==0)
+ 130   2               { 
+ 131   3                delay_1ms(10);
+ 132   3                 if(zj==0)
+ 133   3                 {
+ 134   4                   setn++;
+ 135   4                       if(setn >= 3)
+ 136   4                         setn = 0;      
+ 137   4                       while(!zj);
+ 138   4               xs_sz(seta, setv, setn);
+ 139   4               
+ 140   4                                       
+ 141   4                 }
+ 142   3               }
+ 143   2      
+ 144   2      
+ 145   2      
+ 146   2      
+ 147   2        }//
+ 148   1      
+ 149   1      
+ 150   1      }
+ 151          
+ 152          
+ 153          
+ 154          /**********************************************************
+ 155           定时器1中断服务程序 LIZHF 2013-12-25
+ 156           条件: 11..0592M晶振 CPU 1T
+ 157           占用资源: 
+ 158          **********************************************************/
+ 159          
+ 160          void tm0_int(void) interrupt 1 
+ 161          {
+ 162   1        uint16_t tmp1,tmp2;
+ 163   1        TH0=(65535-55296)/256;
+ 164   1        TL0=(65535-55296)%256; 
+ 165   1        
+ 166   1        tmrn++;
+ 167   1        tmp1 = adcz(4);
+ 168   1        adc4a = adc4a + tmp1;
+ 169   1        tmp2 = adcz(3);
+ 170   1        adc3v = adc3v + tmp2;
+ 171   1         
+ 172   1        if(tmrn==50)
+ 173   1        {
+ 174   2            tmrnx++;
+ 175   2      
+ 176   2              if(adc4a%50>35)
+ 177   2              adc4a = adc4a/50+1;
+ 178   2                      else adc4a = adc4a/50;
+C51 COMPILER V9.01   MAIN                                                                  01/03/2014 13:18:31 PAGE 4   
+
+ 179   2              if(adc3v%50>35)
+ 180   2              adc3v = adc3v/50+1;
+ 181   2                      else adc3v = adc3v/50;
+ 182   2         
+ 183   2       
+ 184   2         //放电时计数
+ 185   2         if(fdzt)
+ 186   2         {     led0=!led0;
+ 187   3           mas = mas + 0.58*adc4a;
+ 188   3               if(mas>3600)
+ 189   3                {
+ 190   4                 mah++;
+ 191   4                 mas = mas-3600;
+ 192   4                }   
+ 193   3         }
+ 194   2         
+ 195   2         tmp1 = setv*20.53;
+ 196   2         if(adc3v<tmp1)
+ 197   2         {
+ 198   3              fdzt=0;
+ 199   3              mosoff=1;
+ 200   3              led0=1;
+ 201   3              pwm0(190,0);//默认1A
+ 202   3              
+ 203   3         } 
+ 204   2         adc4 = adc4a;
+ 205   2         adc3 = adc3v;
+ 206   2         adc4a = 0;
+ 207   2         adc3v = 0; 
+ 208   2         tmrn=0; 
+ 209   2      
+ 210   2        }//50次
+ 211   1      
+ 212   1      
+ 213   1      }
+ 214          
+ 215          
+ 216          /***************************************************************************************
+ 217           描述 : 检测编码开关子程序       程序占用全局变量: aold bold
+ 218           时间 : 2013-11-14      for lizhifang 
+ 219          ****************************************************************************************/
+ 220          
+ 221          void bmkg(void)
+ 222          {   
+ 223   1        
+ 224   1         if(aold^bold)    //异或有转动
+ 225   1        {
+ 226   2         if(ax&&bx)      //转到A,B同为1
+ 227   2         {
+ 228   3           if(bold)
+ 229   3                jia1();       //处理子程序
+ 230   3               if(aold)
+ 231   3               jian1();
+ 232   3         }
+ 233   2         if((!ax)&&(!bx)) //转到A,B同为0
+ 234   2         {        
+ 235   3           if(aold)
+ 236   3                jia1();
+ 237   3               if(bold)
+ 238   3                jian1();    
+ 239   3         } 
+ 240   2        } 
+C51 COMPILER V9.01   MAIN                                                                  01/03/2014 13:18:31 PAGE 5   
+
+ 241   1        aold = ax;
+ 242   1        bold = bx;
+ 243   1        //return bmn;
+ 244   1      }
+ 245          
+ 246          void jia1(void)
+ 247          {
+ 248   1       if(setn==1)
+ 249   1        seta++;
+ 250   1         pwm0(240,seta*6);
+ 251   1       if(setn==2)
+ 252   1       setv++;
+ 253   1         xs_sz(seta, setv, setn);
+ 254   1      
+ 255   1      }
+ 256          
+ 257          void jian1(void)
+ 258          {
+ 259   1       if(setn==1)
+ 260   1        seta=seta-1;
+ 261   1         pwm0(190,seta*5);
+ 262   1       if(setn==2)
+ 263   1       setv=setv-1;
+ 264   1         xs_sz(seta, setv, setn);
+ 265   1      
+ 266   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    838    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     17       8
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

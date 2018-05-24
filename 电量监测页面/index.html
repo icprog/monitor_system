@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        html {
+            box-sizing: border-box;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            margin: 0;
+            background-color: lightgoldenrodyellow;
+        }
+
+        nav ul {
+            padding: 0;
+            font-size: 0;
+            list-style: none;
+            margin-bottom: 800px;
+        }
+
+        nav li {
+            display: inline-block;
+        }
+
+        nav a {
+            display: block;
+            width: 194px; /* +6 px 右 border */
+            font-size: initial;
+            text-decoration: none;
+            color: lightgrey;
+        }
+
+        .ul-level-one {
+            width: 994px;
+            height: 50px;
+            line-height: 50px;
+            background-color: black;
+        }
+
+        @media (min-width: 1201px) {
+            /* >= 1200 */
+            .ul-level-one {
+                margin: 0 calc(50vw - 497px);
+                /* 防止页面内容超过 视口高度时,出现抖动 (如果页面肯定会超过 视口高度,那么这条不用考虑)*/
+            }
+        }
+
+        /*@media (max-width: 1200px) {*/
+        /*!* >= 1200 *!*/
+        /*.ul-level-one {*/
+        /*margin: 0 auto;*/
+        /*}*/
+        /*}*/
+
+        .li-level-one {
+            position: relative;
+            width: 200px;
+            text-align: center;
+            border-right: 6px solid black;
+        }
+
+        .li-level-one:last-of-type {
+            width: 194px;
+            border-right: none;
+        }
+
+        .ul-level-two {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            display: none;
+            background-color: black;
+        }
+
+        .li-level-one:hover .ul-level-two {
+            display: block;
+        }
+
+        .li-level-two {
+            width: 194px;
+        }
+
+        .canvas {
+            padding-top: 150px;
+            height: calc(100vh - 60px);
+        }
+
+    </style>
+</head>
+<body>
+<nav>
+    <ul class="ul-level-one">
+        <li class="li-level-one">
+            <a href="#1">首页</a>
+        </li>
+        <li class="li-level-one">
+            <a href="#2">实时数据查询</a>
+            <ul class="ul-level-two">
+                <li class="li-level-two"><a href="#2.1">实时电池容量</a></li>
+                <li class="li-level-two"><a href="#2.2">实时电池温度</a></li>
+                <li class="li-level-two"><a href="#2.3">实时电池放电速率</a></li>
+            </ul>
+        </li>
+        <li class="li-level-one">
+            <a href="#3">历史数据查询</a>
+            <ul class="ul-level-two">
+                <li class="li-level-two"><a href="#3.1">历史电池容量查询</a></li>
+                <li class="li-level-two"><a href="#3.2">历史电池温度查询</a></li>
+                <li class="li-level-two"><a href="#3.3">历史电池放电速率查询</a></li>
+            </ul>
+        </li>
+        <li class="li-level-one">
+            <a href="#4">设置</a>
+            <ul class="ul-level-two">
+                <li class="li-level-two"><a href="#4.1">IP地址切换</a></li>
+                <li class="li-level-two"><a href="#4.2">密码修改</a></li>
+                <li class="li-level-two"><a href="#4.3">数据清理</a></li>
+            </ul>
+        </li>
+        <li class="li-level-one">
+            <a href="#5">登录</a>
+        </li>
+    </ul>
+
+    <div class="canvas">
+        <div id="container" style="height: 100%"></div>
+        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+        <script type="text/javascript"
+                src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+        <script type="text/javascript"
+                src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+        <script type="text/javascript"
+                src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+        <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
+        <script type="text/javascript"
+                src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+        <script type="text/javascript">
+            var dom = document.getElementById("container");
+            var myChart = echarts.init(dom);
+            var app = {};
+            option = null;
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '12', '13', '14', '15', '16', '17', '18', '19', '20', '20', '21', '22', '23', '时间']
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                series: [{
+                    data: [, , , , 98, 96, 91, 88, 84, 83, 73, 66, 64, 62, 61, 45, 25, 0, , , , , ,],
+                    type: 'line',
+                    smooth: true
+                }]
+            };
+            if (option && typeof option === "object") {
+                myChart.setOption(option, true);
+            }
+        </script>
+    </div>
+</nav>
+
+</body>
+</html>

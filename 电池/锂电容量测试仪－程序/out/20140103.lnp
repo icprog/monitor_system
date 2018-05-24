@@ -1,0 +1,6 @@
+".\out\main.obj",
+".\out\lzf5162.obj",
+".\out\s6b3306.obj",
+".\out\ZI16.obj" 
+TO ".\out\20140103" 
+PRINT(".\20140103.m51") RAMSIZE(256) 

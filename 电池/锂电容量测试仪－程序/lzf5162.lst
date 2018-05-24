@@ -1,0 +1,152 @@
+C51 COMPILER V9.01   LZF5162                                                               01/03/2014 13:18:31 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE LZF5162
+OBJECT MODULE PLACED IN .\out\lzf5162.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE src\lzf5162.c BROWSE DEBUG OBJECTEXTEND PRINT(.\lzf5162.lst) OBJECT(.\out\l
+                    -zf5162.obj)
+
+line level    source
+
+   1          #include "LZF5162.h"
+   2          
+   3          
+   4          /**********************************************************
+   5           5MS定时程序 LIZHF 2013-12-25
+   6           条件: 11..0592M晶振 CPU 1T
+   7           占用资源:定时器0 启用定时器中断
+   8          **********************************************************/
+   9          void tm0_init(void)
+  10          { 
+  11   1        TMOD |= 0X01;//定时器  
+  12   1         
+  13   1        TH0=(65535-55296)/256;
+  14   1        TL0=(65535-55296)%256; 
+  15   1        ET0=1; 
+  16   1       // EA=1;
+  17   1              
+  18   1        TR0=1;
+  19   1      }
+  20          
+  21          
+  22          
+  23          
+  24          
+  25          
+  26          
+  27          
+  28          /*****************************
+  29           1MS延时程序 LIZHF 2013-12-18
+  30           条件: 11..0592M晶振 CPU 1T
+  31           占用资源:定时器1
+  32          *****************************/
+  33          void delay_1ms(uint16_t x)
+  34          { 
+  35   1        TF1=0;
+  36   1        TR1=1;
+  37   1        while(x--)
+  38   1        {   
+  39   2         TH1=(65535-11050)/256;
+  40   2         TL1=(65535-11050)%256;          
+  41   2         while(!TF1); //等定时完成,TF1=1,WHILE为0跳出.
+  42   2         TF1=0;
+  43   2        }
+  44   1        TF1=0;        
+  45   1        TR1=0;
+  46   1      }
+  47          
+  48          
+  49          /*****************************
+  50           1MS延时程序 LIZHF 2013-12-27
+  51           条件: 11..0592M晶振 CPU 1T
+  52           占用资源:定时器1
+  53          *****************************/
+  54          void delay(unsigned int x)
+C51 COMPILER V9.01   LZF5162                                                               01/03/2014 13:18:31 PAGE 2   
+
+  55          {
+  56   1      
+  57   1       unsigned int s;
+  58   1       unsigned char j,k;
+  59   1       for(s = 0;s<x;s++)
+  60   1         for(j=0;j<15;j++)
+  61   1           for(k=0;k<248;k++); 
+  62   1      }
+  63          
+  64          
+  65          
+  66          
+  67          /**********************************************************
+  68           PWM1程序 LIZHF 2013-12-18
+  69           条件: 11..0592M晶振 CPU 1T
+  70           占用资源:PWM1 
+  71          **********************************************************/
+  72          void pwm0(uint8_t pwmp,uint8_t pwmd)
+  73          {
+  74   1      
+  75   1       //P2M0 = 0X0;
+  76   1       //P2M1 = 0X0ff;  //改成全推挽输出
+  77   1        //P2.7为PWM1
+  78   1        PWM0P = pwmp;//PWM频率  = SYSCLK/2/0XFE
+  79   1        PWM0D = pwmd;//占空比 = 0X7F/0XFE      
+  80   1      
+  81   1        PWM0CON = 0X0|(1<<7)|(1<<0);
+  82   1        //7位 1:开 0:关闭 6:极性,1:低 0:高 5-4:时钟分频,1:中断 0无1有,0:管脚,0:IO 1:PWM
+  83   1       
+  84   1      
+  85   1      }
+  86          /**********************************************************
+  87           ADC初始化程序 LIZHF 2013-12-25
+  88           条件: 11..0592M晶振 CPU 1T
+  89           ADT为8F每次转换时间30.3uS
+  90           **********************************************************/
+  91          void adcinit(void)
+  92          {
+  93   1        P0M0 = 0X0FF;
+  94   1        P0M1 = 0X0;  // 高阻态输入
+  95   1        ADT = 0X0|(4<<5)|(15<<0);//TAD=1uS 采样15个周期,ADC一次30.3uS
+  96   1        ADCH = 0X0FF;//P0口做ADC输入
+  97   1        ADCON = 0X0|(1<<7)|(1<<4); 
+  98   1        //7位开启ADC功能,4位选择外部VREF,  3~1位选择通道,0位开始转换  
+  99   1      }
+ 100          
+ 101          /**********************************************************
+ 102           ADC转换程序 LIZHF 2013-12-25
+ 103           条件: 11.0592M晶振 CPU 1T
+ 104           输入:通道adn,等待30.3uS后,返回一个ADC结果,advalue
+ 105           **********************************************************/
+ 106          uint16_t adcz(uint8_t adn)
+ 107          {
+ 108   1        uint8_t       AD_H;
+ 109   1        uint8_t       AD_L;
+ 110   1        uint16_t ADValue=0;
+ 111   1        ADCON &= 0xf1;  //3~1位清0
+ 112   1        ADCON |= (adn<<1)|(1<<0); 
+ 113   1        //7位开启ADC功能,4位选择外部VREF,  3~1位选择通道,0位开始转换  
+ 114   1        while(ADCON&0X01);//0位为0则跳出.ADC转换完成
+ 115   1                      AD_H=ADDH;
+ 116   1                      ADValue=AD_H;
+C51 COMPILER V9.01   LZF5162                                                               01/03/2014 13:18:31 PAGE 3   
+
+ 117   1                      ADValue=(ADValue<<2)&0xFFFC;
+ 118   1                      AD_L=ADDL&0x03;
+ 119   1                      ADValue=ADValue|AD_L;
+ 120   1                      ADValue&=0x03ff;
+ 121   1              return  ADValue;
+ 122   1      
+ 123   1      }
+ 124          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    157    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
