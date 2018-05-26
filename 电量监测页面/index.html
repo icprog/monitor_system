@@ -14,7 +14,7 @@
 
         body {
             margin: 0;
-            background-color: lightgoldenrodyellow;
+            background-color: white;
         }
 
         nav ul {
@@ -100,20 +100,10 @@
             <a href="#1">首页</a>
         </li>
         <li class="li-level-one">
-            <a href="#2">实时数据查询</a>
-            <ul class="ul-level-two">
-                <li class="li-level-two"><a href="#2.1">实时电池容量</a></li>
-                <li class="li-level-two"><a href="#2.2">实时电池温度</a></li>
-                <li class="li-level-two"><a href="#2.3">实时电池放电速率</a></li>
-            </ul>
+            <a href="#2">实时温度查询</a>
         </li>
         <li class="li-level-one">
-            <a href="#3">历史数据查询</a>
-            <ul class="ul-level-two">
-                <li class="li-level-two"><a href="#3.1">历史电池容量查询</a></li>
-                <li class="li-level-two"><a href="#3.2">历史电池温度查询</a></li>
-                <li class="li-level-two"><a href="#3.3">历史电池放电速率查询</a></li>
-            </ul>
+            <a href="#3">历史温度数据查询</a>
         </li>
         <li class="li-level-one">
             <a href="#4">设置</a>
@@ -157,6 +147,7 @@
                     type: 'value',
                 },
                 series: [{
+				/* 在data里， 修改你要设置的温度  温度写在逗号前面   注意数据别超过24个*/
                     data: [, , , , 98, 96, 91, 88, 84, 83, 73, 66, 64, 62, 61, 45, 25, 0, , , , , ,],
                     type: 'line',
                     smooth: true
